@@ -2,14 +2,13 @@
 
 Auto generate the unit test file for the available routes
 
+This package require php >= 8.1 and tested by laravel 10.
+
 ## Installation
 
-The package can easily be installed by running `composer require vigneshc91/laravel-test-generator` in your project's root folder.
-
-If you are running a version of Laravel < 5.5 also make sure you add `Vigneshc91\LaravelTestGenerator\TestGeneratorServiceProvider::class` to the `providers` array in `config/app.php`.
-
-This will register the artisan command that will be available to you.
-
+```sh
+composer require Mahdianmanesh/laravel-test-generator --dev
+```
 
 ## Usage
 

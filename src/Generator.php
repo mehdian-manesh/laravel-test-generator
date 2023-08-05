@@ -1,12 +1,12 @@
 <?php
 
-namespace Vigneshc91\LaravelTestGenerator;
+namespace Mahdianmanesh\LaravelTestGenerator;
 
 use ReflectionMethod;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Http\FormRequest;
-use Vigneshc91\LaravelTestGenerator\TestCaseGenerator;
+use Mahdianmanesh\LaravelTestGenerator\TestCaseGenerator;
 
 class Generator
 {
