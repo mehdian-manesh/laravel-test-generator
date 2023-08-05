@@ -40,12 +40,12 @@ class TestGenerator extends Command
      */
     public function handle()
     {
-        $options = [
-            'directory' => $this->option('dir') ? $this->option('dir') : '',
-            'sync' => $this->option('sync') ? true : false,  
-            'filter' => $this->option('filter')
-        ];
-        $generator = new Generator($options);
+        $generator = new Generator(
+            $this->option('dir') ?: '',
+            (bool) $this->option('sync'),
+            $this->option('filter')
+        );
+
         $generator->generate();
     }
 }

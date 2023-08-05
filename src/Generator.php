@@ -28,16 +28,19 @@ class Generator
 
     /**
      * Initiate the global parameters
-     *
-     * @param array $options
+     * 
+     * @param string $directory the root directory for all tests
+     * @param bool $sync
+     * @param mixed $filter
      */
-    public function __construct($options)
+    public function __construct(string $directory = '', bool $sync = false, $filter = null)
     {
-        $this->directory = $options['directory'];
-        $this->routeFilter = $options['filter'];
-        $this->sync = $options['sync'];
-        $this->testCaseGenerator = new  TestCaseGenerator();
-        $this->formatter = new  Formatter($this->directory, $this->sync);
+        $this->directory   = $directory;
+        $this->routeFilter = $filter;
+        $this->sync        = $sync;
+
+        $this->testCaseGenerator = new TestCaseGenerator();
+        $this->formatter         = new Formatter($directory, $sync);
     }
 
     /**
@@ -59,32 +62,38 @@ class Generator
     protected function getRouteMethods()
     {
         foreach ($this->getAppRoutes() as $route) {
-            $this->originalUri = $uri = $this->getRouteUri($route);
-            $this->uri = $this->strip_optional_char($uri);
 
-            if ($this->routeFilter && !preg_match('/^' . preg_quote($this->routeFilter, '/') . '/', $this->uri)) {
+            $this->originalUri = $this->getRouteUri($route);
+            $uri = $this->strip_optional_char($this->originalUri);
+
+            // exclude routeFilter
+            if (
+                $this->routeFilter &&
+                !preg_match(
+                    '/^' . preg_quote($this->routeFilter, '/') . '/',
+                    $uri
+                )
+            ) {
                 continue;
             }   
 
-            $action = $route->getAction('uses');
-            $methods = $route->methods();
-            $actionName = $this->getActionName($route->getActionName());
-            
+            $action         = $route->getAction('uses');
+            $methods        = $route->methods();
+            $actionName     = $this->getActionName($route->getActionName());
             $controllerName = $this->getControllerName($route->getActionName());
 
             foreach ($methods as $method) {
-                $this->method = strtoupper($method);
+
+                $method = strtoupper($method);
                 
-                if (in_array($this->method, ['HEAD'])) continue;
+                if (in_array($method, ['HEAD'])) continue;
                 
-                $rules = $this->getFormRules($action);
-                if(empty($rules)) {
-                    $rules = [];
-                }
-                $case = $this->testCaseGenerator->generate($rules);
+                $rules   = $this->getFormRules($action) ?? [];
+                $case    = $this->testCaseGenerator->generate($rules);
                 $hasAuth = $this->isAuthorizationExist($route->middleware());
-                $this->formatter->format($case, $this->uri, $this->method, $controllerName, $actionName, $hasAuth);
-                
+
+                $this->formatter->format($case, $uri, $method, 
+                                        $controllerName, $actionName, $hasAuth);
             }
         }
     }
@@ -95,13 +104,12 @@ class Generator
      * @param array $middlewares
      * @return boolean
      */
-    protected function isAuthorizationExist($middlewares)
+    protected function isAuthorizationExist($middlewares) : bool
     {
-        $hasAuth = array_filter($middlewares, function ($var) { 
-            return (strpos($var, 'auth') > -1); 
-        });
-
-        return $hasAuth;
+        return (bool) array_filter(
+            $middlewares,
+            fn ($var) => strpos($var, 'auth') > -1
+        );
     }
 
     /**
@@ -110,7 +118,7 @@ class Generator
      * @param string $uri
      * @return string
      */
-    protected function strip_optional_char($uri)
+    protected function strip_optional_char($uri) : string
     {
         return str_replace('?', '', $uri);
     }
@@ -120,7 +128,7 @@ class Generator
      *
      * @return array
      */
-    protected function getAppRoutes()
+    protected function getAppRoutes() : array
     {
         return app('router')->getRoutes();
     }
@@ -131,7 +139,7 @@ class Generator
      * @param Route $route
      * @return string
      */
-    protected function getRouteUri(Route $route)
+    protected function getRouteUri(Route $route) : string
     {
         $uri = $route->uri();
 
@@ -145,12 +153,12 @@ class Generator
     /**
      * Get the form rules for creating the parameters
      *
-     * @param [type] $action
+     * @param string|mixed $action
      * @return array
      */
-    protected function getFormRules($action)
+    protected function getFormRules($action) : array
     {
-        if (!is_string($action)) return false;
+        if (!is_string($action)) return [];
         
         $parsedAction = Str::parseCallback($action);
         
@@ -174,11 +182,11 @@ class Generator
      */
     protected function getControllerName($controller)
     {
-        $namespaceReplaced = substr($controller, strrpos($controller, '\\')+1);
-        $actionNameReplaced = substr($namespaceReplaced, 0, strpos($namespaceReplaced, '@'));
-        $controllerReplaced = str_replace('Controller', '', $actionNameReplaced);
+        $namespaceReplaced   = substr($controller, strrpos($controller, '\\')+1);
+        $actionNameReplaced  = substr($namespaceReplaced, 0, strpos($namespaceReplaced, '@'));
+        $controllerReplaced  = str_replace('Controller', '', $actionNameReplaced);
         $controllerNameArray = preg_split('/(?=[A-Z])/', $controllerReplaced);
-        $controllerName = trim(implode('', $controllerNameArray));
+        $controllerName      = trim(implode('', $controllerNameArray));
 
         return $controllerName;
     }
@@ -192,8 +200,8 @@ class Generator
     protected function getActionName($actionName)
     {
         $actionNameSubString = substr($actionName, strpos($actionName, '@')+1);
-        $actionNameArray = preg_split('/(?=[A-Z])/', ucfirst($actionNameSubString));
-        $actionName = trim(implode('', $actionNameArray));
+        $actionNameArray     = preg_split('/(?=[A-Z])/', ucfirst($actionNameSubString));
+        $actionName          = trim(implode('', $actionNameArray));
 
         return $actionName;
     }

@@ -19,10 +19,10 @@ class Formatter
     /**
      * Initiate the options
      *
-     * @param string $directory
-     * @param boolean $sync
+     * @param string $directory the root directory for all tests
+     * @param bool $sync
      */
-    public function __construct($directory, $sync)
+    public function __construct(string $directory, bool $sync)
     {
         $this->directory = $directory;
         $this->sync = $sync;
@@ -34,21 +34,15 @@ class Formatter
 
     /**
      * Format the test case in the controller
-     *
-     * @param array $case
-     * @param string $url
-     * @param string $method
-     * @param string $controllerName
-     * @param string $actionName
-     * @return void
      */
-    public function format($case, $url, $method, $controllerName, $actionName, $auth)
+    public function format(array $case, string $url, string $method, string $controllerName, string $actionName, bool $auth)
     {
         $this->cases[$controllerName]['action'] = $actionName;
-        $this->cases[$controllerName]['url'] = $url;
+        $this->cases[$controllerName]['url'   ] = $url;
         $this->cases[$controllerName]['method'] = $method;
         $this->cases[$controllerName]['params'] = $case;
-        $this->cases[$controllerName]['auth'] = $auth;
+        $this->cases[$controllerName]['auth'  ] = $auth;
+        
         if(empty($this->cases[$controllerName]['function'])) {
             $this->cases[$controllerName]['function'] = [];
         }
